@@ -31,6 +31,7 @@ import (
 // git-xargs-<repo-name> appended to it to make it easier to find when you are looking for it while debugging
 func cloneLocalRepository(config *config.GitXargsConfig, repo *github.Repository) (string, *git.Repository, error) {
 	logger := logging.GetLogger("git-xargs")
+	config.CloneJobsLimiter <- struct{}{}
 
 	logger.WithFields(logrus.Fields{
 		"Repo": repo.GetName(),
@@ -58,6 +59,8 @@ func cloneLocalRepository(config *config.GitXargsConfig, repo *github.Repository
 	logger.WithFields(logrus.Fields{
 		"Repo": repo.GetName(),
 	}).Debug(gitProgressBuffer)
+
+	<-config.CloneJobsLimiter
 
 	if err != nil {
 		logger.WithFields(logrus.Fields{
